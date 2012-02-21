@@ -20,38 +20,46 @@
 
 (deftype TreeNode [left right ^int item])
 
-(defn make-tree [^long item ^long depth]
-  (if (zero? depth)
-    (TreeNode. nil nil item)
-    (TreeNode.
-     (make-tree (dec (* 2 item)) (dec depth))
-     (make-tree (* 2 item) (dec depth))
-     item)))
+(defn ^:static make-tree [^long item ^long depth]
+  (let [int-item (int item)
+        int-depth (int depth)]
+    (if (<= depth 0)
+      (TreeNode. nil nil int-item)
+      (TreeNode.
+       (make-tree (unchecked-dec (unchecked-multiply (int 2) int-item))
+                  (unchecked-dec int-depth))
+       (make-tree (unchecked-multiply (int 2) int-item)
+                  (unchecked-dec int-depth))
+       int-item))))
 
-(defn item-check ^long [^TreeNode node]
-  (if (nil? (.left node))
-    (.item node)
-    (+ (+ (.item node)
-          (item-check (.left node)))
-       (- (item-check (.right node))))))
+(defn ^:static item-check ^long [^TreeNode node]
+  (let [item (int (.item node))]
+	  (if-not (.left node)
+	    item
+	    (unchecked-add 
+         (unchecked-add 
+           item 
+           (unchecked-int (item-check (.left node))))
+	       (unchecked-negate 
+           (unchecked-int (item-check (.right node))))))))
 
-(defn iterate-trees [mx mn d]
-  (let [iterations (bit-shift-left 1 (long (+ mx mn (- d))))]
-    (format "%d\t trees of depth %d\t check: %d"
-            (* 2 iterations)
-            d
-            (loop [result 0
-                   i 1]
-              (if (= i (inc iterations))
-                result
-                (recur (+ result
-                          (item-check (make-tree i d))
-                          (item-check (make-tree (- i) d)))
-                       (inc i)))))))
+    
+(defn ^:static check-trees [^long i ^long acc ^long d]    
+  (if (<= i 0)
+    acc
+    (let [value (unchecked-add 
+                  (unchecked-int (item-check (make-tree i d)))
+                  (unchecked-int (item-check (make-tree (- i) d))))]
+      (recur (dec i) (+ acc value) d))))
+
+(defn iterate-trees 
+  ([mx mn d]
+    (let [iterations (bit-shift-left 1 (int (+ mx mn (- d))))]
+      (format "%d\t trees of depth %d\t check: %d" (* 2 iterations) d (check-trees iterations 0 d)))))
 
 (defn main [max-depth]
-  (let [stretch-depth (inc max-depth)]
-    (let [tree (make-tree 0 stretch-depth)
+  (let [stretch-depth (unchecked-inc (long max-depth))]
+    (let [tree (make-tree (long 0) stretch-depth)
           check (item-check tree)]
       (println (format "stretch tree of depth %d\t check: %d" stretch-depth check)))
     (let [agents (repeatedly (.availableProcessors (Runtime/getRuntime)) #(agent []))
