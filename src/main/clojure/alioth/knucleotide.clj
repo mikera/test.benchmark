@@ -1,12 +1,8 @@
 ;;   The Computer Language Benchmarks Game
-
 ;;   http://shootout.alioth.debian.org/
 
-
 ;; contributed by Andy Fingerhut
-
 ;; modified by Marko Kocic
-
 ;; modified by Mike Anderson to make better use of primitive operations
 
 
@@ -15,12 +11,8 @@
 
 (set! *warn-on-reflection* true)
 
-
-
 ;; Handle slight difference in function name between Clojure 1.2.0 and
-
 ;; 1.3.0-alpha* ability to use type hints to infer fast bit
-
 ;; operations.
 
 (defmacro my-unchecked-inc-int [& args]
@@ -35,11 +27,9 @@
     num
     `(long ~num)))
 
-
 (definterface ITallyCounter
   (^int get_count [])
   (inc_BANG_ []))
-
 
 (deftype TallyCounter [^{:unsynchronized-mutable true :tag int} cnt]
   ITallyCounter
@@ -47,37 +37,24 @@
   (inc! [this]
     (set! cnt (my-unchecked-inc-int cnt))))
 
- 
-
 ;; Return true when the line l is a FASTA description line
-
 
 (defn fasta-description-line [l]
   (= \> (first (seq l))))
 
-
 ;; Return true when the line l is a FASTA description line that begins
-
 ;; with the string desc-str.
-
 
 (defn fasta-description-line-beginning [desc-str l]
   (and (fasta-description-line l)
        (= desc-str (subs l 1 (min (count l) (inc (count desc-str)))))))
 
-
 ;; Take a sequence of lines from a FASTA format file, and a string
-
 ;; desc-str.  Look for a FASTA record with a description that begins
-
 ;; with desc-str, and if one is found, return its DNA sequence as a
-
 ;; single (potentially quite long) string.  If input file is big,
-
 ;; you'll save lots of memory if you call this function in a with-open
-
 ;; for the file, and don't hold on to the head of the lines parameter.
-
 
 (defn fasta-dna-str-with-desc-beginning [desc-str lines]
   (when-let [x (drop-while
@@ -93,58 +70,38 @@
 (def dna-char-to-code-val-map {\A 0, \C 1, \T 2, \G 3})
 (def code-val-to-dna-char {0 \A, 1 \C, 2 \T, 3 \G})
 
+;; Inline macro to accelerate character encoding
 (defmacro dna-char-to-code-val [ch]
   `(case ~ch
      ~@(flatten (seq dna-char-to-code-val-map))))
 
 ;; In the hash map 'tally' in tally-dna-subs-with-len, it is more
-
 ;; straightforward to use a Clojure string (same as a Java string) as
-
 ;; the key, but such a key is significantly bigger than it needs to
-
 ;; be, increasing memory and time required to hash the value.  By
-
 ;; converting a string of A, C, T, and G characters down to an integer
-
 ;; that contains only 2 bits for each character, we make a value that
-
 ;; is significantly smaller and faster to use as a key in the map.
 
 
 ;;    most                 least
-
 ;; significant          significant
-
 ;; bits of int          bits of int
-
 ;;  |                         |
-
 ;;  V                         V
-
 ;; code code code ....  code code
-
 ;;  ^                         ^
-
 ;;  |                         |
-
 ;; code for               code for
-
 ;; *latest*               *earliest*
-
 ;; char in                char in
-
 ;; sequence               sequence
 
 
 ;; Note: Given Clojure 1.2's implementation of bit-shift-left/right
-
 ;; operations, when the value being shifted is larger than a 32-bit
-
 ;; int, they are faster when the shift amount is a compile time
-
 ;; constant.
-
 
 (defn ^:static dna-str-to-key 
   (^long [^String s] (dna-str-to-key s 0 (count s)))
