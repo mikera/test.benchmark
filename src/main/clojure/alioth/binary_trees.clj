@@ -9,7 +9,10 @@
 
 ;   Alioth benchmarks: http://shootout.alioth.debian.org/u64q/benchmark.php?test=binarytrees&lang=all
 ;   Inspired by http://shootout.alioth.debian.org/u64q/program.php?test=binarytrees&lang=java&id=1
-;           and http://shootout.alioth.debian.org/u64q/program.php?test=binarytrees&lang=clojure&id=5                                        ;
+;           and http://shootout.alioth.debian.org/u64q/program.php?test=binarytrees&lang=clojure&id=5         
+
+; Updated 2012-02-21 by Mike Anderson based on code by Andy Fingerhut
+
 (ns alioth.binary-trees
   (:gen-class))
 
@@ -44,7 +47,7 @@
            (unchecked-int (item-check (.right node))))))))
 
     
-(defn ^:static check-trees [^long i ^long acc ^long d]    
+(defn ^:static check-trees ^long [^long i ^long acc ^long d]    
   (if (<= i 0)
     acc
     (let [value (unchecked-add 
